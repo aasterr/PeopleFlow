@@ -14,11 +14,11 @@ def seconds_to_hhmmss(seconds):
     return time.strftime("%H:%M:%S", time.gmtime(seconds))
 
 # Load map information
-ANIM_DIR = os.path.expanduser('~/git/PeopleFlow/utilities_ws/src/RA-L/trajectory_plot/')
+ANIM_DIR = os.path.expanduser('~/git/PeopleFlow/utilities_ws/src/RA-L/hrisim_postprocess/')
 MAP_DIR = os.path.expanduser('~/git/PeopleFlow/utilities_ws/src/RA-L/peopledensity/maps/')
 MAP_NAME = 'warehouse'
 TRAJ_PATH= os.path.expanduser('utilities_ws/src/RA-L/hrisim_postprocess/csv/original/')
-BAGNAME= 'BL100_21102024'
+BAGNAME= 'BL75_29102024'
 ROBOT_COLOR = 'tab:orange'
 STEP = 600
 MARKER_SIZE = 40
