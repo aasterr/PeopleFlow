@@ -70,6 +70,12 @@ Two additional scripts are provided to help you interact with and stop the runni
     ```bash
     ./docstop.sh
     ```
+
+### Building ROS workspace
+Once inside the container using ./docshell, you can build the ros_ws workspace with the following command:
+```
+catkin build
+```
     
 ### Scenario setup and launch
 Once inside the Docker container, run the following command to view the `.tmule` file containing all simulator parameters:
