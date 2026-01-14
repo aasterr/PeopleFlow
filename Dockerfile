@@ -80,14 +80,22 @@ RUN mkdir -p /home/hrisim/tiago_ws/src
 WORKDIR /home/hrisim/tiago_ws
 
 # Download tiago_public-noetic.rosinstall and clone required repositories
-RUN wget https://raw.githubusercontent.com/pal-robotics/tiago_tutorials/noetic-devel/tiago_public-noetic.rosinstall && \
-rosinstall src /opt/ros/noetic tiago_public-noetic.rosinstall
+# Clone the complete, stable source code from your personal GitHub repo
+RUN git clone https://github.com/lcastri/mytiago_src.git /home/hrisim/tiago_ws/src
 
 # Run user-level rosdep commands and install dependencies
 RUN rosdep update --include-eol-distros && \
 sudo apt-get update && \
 rosdep install -y --from-paths src --ignore-src --rosdistro noetic --skip-keys \
 "urdf_test omni_drive_controller orocos_kdl pal_filters libgazebo9-dev pal_usb_utils speed_limit_node camera_calibration_files pal_moveit_plugins pal_startup_msgs pal_local_joint_control pal_pcl_points_throttle_and_filter current_limit_controller hokuyo_node dynamixel_cpp pal_moveit_capabilities pal_pcl dynamic_footprint gravity_compensation_controller pal-orbbec-openni2 pal_loc_measure pal_map_manager ydlidar_ros_driver"
+# RUN wget https://raw.githubusercontent.com/pal-robotics/tiago_tutorials/noetic-devel/tiago_public-noetic.rosinstall && \
+# rosinstall src /opt/ros/noetic tiago_public-noetic.rosinstall
+
+# Run user-level rosdep commands and install dependencies
+# RUN rosdep update --include-eol-distros && \
+# sudo apt-get update && \
+# rosdep install -y --from-paths src --ignore-src --rosdistro noetic --skip-keys \
+# "urdf_test omni_drive_controller orocos_kdl pal_filters libgazebo9-dev pal_usb_utils speed_limit_node camera_calibration_files pal_moveit_plugins pal_startup_msgs pal_local_joint_control pal_pcl_points_throttle_and_filter current_limit_controller hokuyo_node dynamixel_cpp pal_moveit_capabilities pal_pcl dynamic_footprint gravity_compensation_controller pal-orbbec-openni2 pal_loc_measure pal_map_manager ydlidar_ros_driver"
 
 # # COPY workspace files with correct destination and ownership
 # COPY HRISim_docker/src/HRISim/robot/tiago_controller_conf_package.xml /home/hrisim/tiago_ws/src/tiago_robot/tiago_controller_configuration/package.xml
