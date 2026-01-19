@@ -13,14 +13,16 @@ robot trajectories influenced by contextual factors such as time, environment la
 If you find this repo useful for your research, please consider citing the following paper:
 
 ```bibtex
-@misc{castri2025causalityenhanceddecision,
-      title={Causality-enhanced Decision-Making for Autonomous Mobile Robots in Dynamic Environments}, 
-      author={Luca Castri and Gloria Beraldo and Nicola Bellotto},
-      year={2025},
-      eprint={2504.11901},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO},
-      url={https://arxiv.org/abs/2504.11901}, 
+@article{CASTRI2026131246,
+         title = {Causality-enhanced Decision-Making for Autonomous Mobile Robots in Dynamic Environments},
+         journal = {Expert Systems with Applications},
+         pages = {131246},
+         year = {2026},
+         issn = {0957-4174},
+         doi = {https://doi.org/10.1016/j.eswa.2026.131246},
+         url = {https://www.sciencedirect.com/science/article/pii/S0957417426001600},
+         author = {Luca Castri and Gloria Beraldo and Nicola Bellotto},
+         keywords = {Causal Discovery and Inference, Robot Autonomy, Human-Robot Spatial Interaction, Decision-Making},
 }
 ```
 
