@@ -33,6 +33,8 @@ services:
     environment:
       - DISPLAY=$DISPLAY          # Forward the display to your host machine.
       - QT_X11_NO_MITSHM=1        # A common variable to ensure QT applications work correctly.
+      - NVIDIA_DRIVER_CAPABILITIES=graphics,compat32,utility,compute,display
+      - NVIDIA_VISIBLE_DEVICES=all
     
     deploy:
       resources:

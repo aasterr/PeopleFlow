@@ -181,7 +181,8 @@ if __name__ == "__main__":
     g_path = ros_utils.wait_for_param("/peopleflow_pedsim_bridge/g_path")
     with open(g_path, 'rb') as f:
         G = pickle.load(f)
-        G.remove_node("parking")
+        if "parking" in G:
+          G.remove_node("parking")
     CLEANING_PATH = nx.approximation.traveling_salesman_problem(G, cycle=False)
     rospy.Subscriber("/hrisim/robot_battery", BatteryStatus, cb_battery)
     rospy.Subscriber("/hrisim/robot_closest_wp", String, cb_robot_closest_wp)
