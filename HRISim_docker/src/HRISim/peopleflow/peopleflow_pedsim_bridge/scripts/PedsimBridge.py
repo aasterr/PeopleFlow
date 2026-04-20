@@ -59,6 +59,11 @@ class PedsimBridge():
             # Load agent from rosparam
             agent = self.load_agents(req)
                         
+            # Simple free-roaming logic (no task system)
+            if agent.isFree and not agent.atWork and agent.isStuck:
+                next_destination = agent.selectDestination(self.timeOfDay, req.destinations)
+                agent.setTask(next_destination, 0)
+
             # Entrance logic
             if (self.timeOfDay == constants.TOD.H1.value and not agent.atWork and 
                 agent.isFree and not agent.isQuitting and 
@@ -167,7 +172,8 @@ if __name__ == '__main__':
         graph_path_show = rospy.ServiceProxy('/graph/path/show', VisualisePath)        # Call the service
         graph_path_show("")
         
-        G.remove_node(constants.WP.CHARGING_STATION.value)
+        if constants.WP.CHARGING_STATION.value in G.nodes:
+            G.remove_node(constants.WP.CHARGING_STATION.value)
         
     pedsimBridge = PedsimBridge()
     rospy.logwarn("Pedsim Bridge started!")
