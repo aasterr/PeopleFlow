@@ -949,23 +949,56 @@
   <obstacle x1="1.1750000000000003" y1="-9.825" x2="1.1250000000000004" y2="-9.774999999999999"/>
   <obstacle x1="1.225000000000001" y1="-9.825" x2="1.1750000000000012" y2="-9.774999999999999"/>
   <waypoint id="WP_BOTTOM" x="0.0" y="-8.5" r="0.5"/>
-  <waypoint id="WP_CROSS" x="0.0" y="0.0" r="0.5"/>
-  <agent x="0.0" y="-8.5" n="1" dx="0.5" dy="0.5" type="1">
+  <waypoint id="WP_CROSS" x="0.0" y="-0.9" r="0.5"/>
+  <waypoint id="WP_POSTER_L" x="-0.6" y="0.5" r="0.3"/>
+  <waypoint id="WP_SPAWN" x="-6.0" y="0.0" r="0.5"/>
+  <waypoint id="WP_TABLE" x="4.0" y="0.0" r="0.5"/>
+  <waypoint id="WP_POSTER_R" x="0.6" y="0.5" r="0.3"/>
+    <agent x="0.1" y="-8.5" n="1" dx="0.3" dy="0.3" type="1">
     <addwaypoint id="WP_BOTTOM"/>
+    <addwaypoint id="WP_POSTER_L"/>
+    <addwaypoint id="WP_POSTER_L"/>
+  </agent>
+  <agent x="-0.1" y="-8.3" n="1" dx="0.3" dy="0.3" type="1">
+    <addwaypoint id="WP_BOTTOM"/>
+    <addwaypoint id="WP_POSTER_L"/>
+    <addwaypoint id="WP_POSTER_L"/>
+  </agent>
+  <agent x="0.2" y="-8.4" n="1" dx="0.3" dy="0.3" type="1">
+    <addwaypoint id="WP_BOTTOM"/>
+    <addwaypoint id="WP_POSTER_R"/>
+    <addwaypoint id="WP_POSTER_R"/>
+  </agent>
+  <agent x="-0.2" y="-8.6" n="1" dx="0.3" dy="0.3" type="1">
+    <addwaypoint id="WP_BOTTOM"/>
+    <addwaypoint id="WP_POSTER_R"/>
+    <addwaypoint id="WP_POSTER_R"/>
+  </agent>
+  <agent x="0.3" y="-8.5" n="1" dx="0.3" dy="0.3" type="1">
+    <addwaypoint id="WP_BOTTOM"/>
+    <addwaypoint id="WP_CROSS"/>
     <addwaypoint id="WP_CROSS"/>
   </agent>
-  <agent x="0.3" y="-7.0" n="1" dx="0.5" dy="0.5" type="1">
+  <agent x="-0.3" y="-8.1" n="1" dx="0.3" dy="0.3" type="1">
     <addwaypoint id="WP_BOTTOM"/>
+    <addwaypoint id="WP_CROSS"/>
     <addwaypoint id="WP_CROSS"/>
   </agent>
-  <agent x="-0.3" y="-5.5" n="1" dx="0.5" dy="0.5" type="1">
+  <agent x="0.1" y="-8.2" n="1" dx="0.3" dy="0.3" type="1">
     <addwaypoint id="WP_BOTTOM"/>
     <addwaypoint id="WP_CROSS"/>
+    <addwaypoint id="WP_CROSS"/>
+  </agent>
+  <agent x="$TIAGO_x" y="$TIAGO_y" n="1" dx="0" dy="0" type="2">
   </agent>
   <schedule>
   <time name="active" duration="86400">
-    <adddest name="WP_BOTTOM" p="0.5" std="0"/>
+    <adddest name="WP_POSTER_L" p="0.5" std="0"/>
+    <adddest name="WP_POSTER_R" p="0.5" std="0"/>
+    <adddest name="WP_BOTTOM" p="0.0" std="0"/>
     <adddest name="WP_CROSS" p="0.5" std="0"/>
+    <adddest name="WP_SPAWN" p="0.0" std="0"/>
+    <adddest name="WP_TABLE" p="0.0" std="0"/>
   </time>
 </schedule>
 </scenario>

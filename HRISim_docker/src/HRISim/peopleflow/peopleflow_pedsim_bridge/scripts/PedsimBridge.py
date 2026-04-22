@@ -37,12 +37,19 @@ class PedsimBridge():
         """Load agents from the ROS parameter server."""
         agent_id = str(req.agent_id)
         agents_param = rospy.get_param(f'/peopleflow/agents/{agent_id}', None)
-        if agents_param is not None:
-            a = Agent.from_dict(agents_param, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME)
-            # a = Agent.from_dict(agents_param, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME, OBSTACLES)
+    
+        if agent_id in AGENTS_CROSS:
+            schedule = SCHEDULE_CROSS
+        elif agent_id in AGENTS_POSTER:
+            schedule = SCHEDULE_POSTER
         else:
-            a = Agent(agent_id, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME)
-            # a = Agent(agent_id, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME, OBSTACLES)
+            schedule = SCHEDULE
+
+        if agents_param is not None:
+            a = Agent.from_dict(agents_param, schedule, G, ALLOW_TASK, MAX_TASKTIME)
+        else:
+            a = Agent(agent_id, schedule, G, ALLOW_TASK, MAX_TASKTIME)
+
         a.x = req.origin.x
         a.y = req.origin.y
         a.isStuck = req.is_stuck
@@ -98,6 +105,19 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)  # 10 Hz
     
     SCHEDULE = ros_utils.wait_for_param("/peopleflow/schedule")
+
+    SCHEDULE_CROSS = {time_name: {
+        'dests': {k: v for k, v in time_data['dests'].items() if k in ['WP_CROSS']},
+        'duration': time_data['duration']
+    } for time_name, time_data in SCHEDULE.items()}
+
+    SCHEDULE_POSTER = {time_name: {
+        'dests': {k: v for k, v in time_data['dests'].items() if k in ['WP_POSTER_L', 'WP_POSTER_R']},
+        'duration': time_data['duration']
+    } for time_name, time_data in SCHEDULE.items()}
+
+    AGENTS_CROSS = ['4', '5', '6', '7']
+    AGENTS_POSTER = ['0', '1', '2', '3']
     WPS = ros_utils.wait_for_param("/peopleflow/wps")
     ALLOW_TASK = rospy.get_param("~allow_task", False)
     MAX_TASKTIME = int(rospy.get_param("~max_tasktime"))

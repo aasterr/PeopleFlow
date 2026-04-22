@@ -59,10 +59,12 @@ init_cmd: |
   export_default SCENARIO "corridor"
   export_default ALLOW_TASK "true"
   export_default STARTING_ELAPSED "8"
-  export_default MAX_TASKTIME "60"
+  export_default MAX_TASKTIME "86400"
   export_default IS_STUCK_THRESHOLD "65"
   export_default ROBOT_MODE "1"
   export_default MAX_HUMAN_SPEED "1.5"
+  export GAZEBO_MODEL_DATABASE_URI=""
+  export GAZEBO_MODEL_PATH=/home/hrisim/.gazebo/models:/home/hrisim/tiago_ws/src/pal_gazebo_worlds/models/
   export_default ROBOT_RADIUS "5"
   export_default SPAWN_AGENT "true"
   export_default SPAWN_TELEOP_AGENT "false"

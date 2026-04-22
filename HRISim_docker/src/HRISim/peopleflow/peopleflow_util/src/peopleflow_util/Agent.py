@@ -135,6 +135,7 @@ class Agent:
         tmp_dest = []
         probabilities = []
         for dest in potential_dests:
+            if dest not in destinations: continue
             mean = destinations[dest]['mean']
             std = destinations[dest]['std']
             
@@ -146,6 +147,7 @@ class Agent:
 
         # Normalize the probabilities
         probabilities = np.array(probabilities)
+        probabilities = probabilities / probabilities.sum()
         # Randomly select a destination
         selected_destination = np.random.choice(tmp_dest, p=probabilities)
         
