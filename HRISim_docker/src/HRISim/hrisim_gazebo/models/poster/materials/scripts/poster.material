@@ -1,0 +1,13 @@
+material Poster/Image
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture poster.png
+      }
+    }
+  }
+}

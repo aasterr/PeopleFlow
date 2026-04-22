@@ -2026,171 +2026,21 @@
       <frame name='rgbd_laser_link' attached_to='rgbd_laser_joint'/>
       <pose>-6 0 0 0 -0 0</pose>
     </model>
-    <model name='0'>
-      <link name='cylinder_link'>
-        <visual name='cylinder_visual'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>1.5</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <name>Gazebo/Red</name>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-            </script>
-          </material>
-        </visual>
-        <collision name='cylinder_collision'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>1.5</length>
-            </cylinder>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <self_collide>0</self_collide>
-        <inertial>
-          <pose>0 0 0 0 -0 0</pose>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-          <mass>1</mass>
-        </inertial>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose>0.01498 -8.69597 1.5 0 -0 1.67977</pose>
-    </model>
-    <model name='1'>
-      <link name='cylinder_link'>
-        <visual name='cylinder_visual'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>1.5</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <name>Gazebo/Red</name>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-            </script>
-          </material>
-        </visual>
-        <collision name='cylinder_collision'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>1.5</length>
-            </cylinder>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <self_collide>0</self_collide>
-        <inertial>
-          <pose>0 0 0 0 -0 0</pose>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-          <mass>1</mass>
-        </inertial>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose>0.371641 -7.10369 1.5 0 0 -2.07402</pose>
-    </model>
-    <model name='2'>
-      <link name='cylinder_link'>
-        <visual name='cylinder_visual'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>1.5</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <name>Gazebo/Red</name>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-            </script>
-          </material>
-        </visual>
-        <collision name='cylinder_collision'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>1.5</length>
-            </cylinder>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <self_collide>0</self_collide>
-        <inertial>
-          <pose>0 0 0 0 -0 0</pose>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-          <mass>1</mass>
-        </inertial>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose>-0.218308 -5.28441 1.5 0 0 -1.37236</pose>
-    </model>
+    <include>
+      <uri>model://citizen_extras_female_02</uri>
+      <name>0</name>
+      <pose>0.01498 -8.69597 0 0 0 1.67977</pose>
+    </include>
+    <include>
+      <uri>model://citizen_extras_female_03</uri>
+      <name>1</name>
+      <pose>0.371641 -7.10369 0 0 0 -2.07402</pose>
+    </include>
+    <include>
+      <uri>model://citizen_extras_male_03</uri>
+      <name>2</name>
+      <pose>-0.218308 -5.28441 0 0 0 -1.37236</pose>
+    </include>
     <model name='poster_0'>
       <link name='Wall_0'>
         <pose>-4.7604 -4.48691 0 0 -0 0</pose>

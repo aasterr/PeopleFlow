@@ -102,8 +102,8 @@ namespace gazebo
         physics::WorldPtr world_;
         event::ConnectionPtr updateConnection_;
         const float MODEL_OFFSET = 0.75;
-        const float MODEL_OFFSET_X = -0.731689;
-        const float MODEL_OFFSET_Y = +0.002827;
+        const float MODEL_OFFSET_X = 0.0;
+        const float MODEL_OFFSET_Y = 0.0;
 
     };
 

@@ -39,10 +39,8 @@ class PedsimBridge():
         agents_param = rospy.get_param(f'/peopleflow/agents/{agent_id}', None)
         if agents_param is not None:
             a = Agent.from_dict(agents_param, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME)
-            # a = Agent.from_dict(agents_param, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME, OBSTACLES)
         else:
             a = Agent(agent_id, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME)
-            # a = Agent(agent_id, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME, OBSTACLES)
         a.x = req.origin.x
         a.y = req.origin.y
         a.isStuck = req.is_stuck
@@ -59,8 +57,8 @@ class PedsimBridge():
                         
             # New goal logic                
             if agent.isStuck or agent.isFree:
-                next_destination = agent.selectDestination(self.timeOfDay, req.destinations)
-                agent.setTask(next_destination, agent.getTaskDuration())
+                next_destination = AGENTSPLAN[int(agent.id)]['tasks'][self.timeOfDay]['destinations'].pop(0)
+                agent.setTask(next_destination, AGENTSPLAN[int(agent.id)]['tasks'][self.timeOfDay]['durations'].pop(0))
             
             elif not agent.isFree: 
                 pass
@@ -110,6 +108,10 @@ if __name__ == '__main__':
         ros_utils.wait_for_service('/graph/path/show')
         graph_path_show = rospy.ServiceProxy('/graph/path/show', VisualisePath)        # Call the service
         graph_path_show("")
+        
+    agentsplan_path = rospy.get_param("~agent_task_list", False)
+    with open(agentsplan_path, 'rb') as f:
+        AGENTSPLAN = pickle.load(f)
                 
     pedsimBridge = PedsimBridge()
     rospy.logwarn("Pedsim Bridge started!")
