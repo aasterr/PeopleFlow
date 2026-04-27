@@ -66,11 +66,20 @@ namespace gazebo
                             gzb_pose.Pos().Set(msg->agent_states[actor].pose.position.x + MODEL_OFFSET_X,
                                                msg->agent_states[actor].pose.position.y + MODEL_OFFSET_Y,
                                                msg->agent_states[actor].pose.position.z + MODEL_OFFSET);
+                                              
                             gzb_pose.Rot().Set(msg->agent_states[actor].pose.orientation.w,
                                                msg->agent_states[actor].pose.orientation.x,
                                                msg->agent_states[actor].pose.orientation.y,
                                                msg->agent_states[actor].pose.orientation.z);
-
+                            double ax = msg->agent_states[actor].pose.position.x + MODEL_OFFSET_X;
+			     double ay = msg->agent_states[actor].pose.position.y + MODEL_OFFSET_Y;
+			     bool nearPosterL = (ax > -1.0 && ax < -0.2 && ay > 0.2 && ay < 0.8);
+			     bool nearPosterR = (ax >  0.2 && ax <  1.0 && ay > 0.2 && ay < 0.8);
+			     if (nearPosterL || nearPosterR) {
+    				 ignition::math::Quaterniond facing_poster;
+    			         facing_poster.Euler(0, 0, IGN_PI / 2.0);
+    			         gzb_pose.Rot() = facing_poster;
+			     }
                             try{
                                 tmp_model->SetWorldPose(gzb_pose);
                             }

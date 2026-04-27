@@ -116,7 +116,7 @@ if __name__ == '__main__':
         'duration': time_data['duration']
     } for time_name, time_data in SCHEDULE.items()}
 
-    AGENTS_CROSS = ['4', '5', '6', '7']
+    AGENTS_CROSS = ['4', '5', '6']
     AGENTS_POSTER = ['0', '1', '2', '3']
     WPS = ros_utils.wait_for_param("/peopleflow/wps")
     ALLOW_TASK = rospy.get_param("~allow_task", False)
