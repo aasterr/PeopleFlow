@@ -365,3 +365,6 @@ dist/
 /shared/*
 /utilities_ws/*
 *.vscode
+*.bak
+*.bak2
+pickle

@@ -2609,104 +2609,6 @@
       </link>
       <pose>4.57898 0.977899 0 0 -0 0</pose>
     </model>
-    <model name='ikea_urban_chair'>
-      <link name='link'>
-        <inertial>
-          <mass>10</mass>
-          <inertia>
-            <ixx>0</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>0</iyy>
-            <iyz>0</iyz>
-            <izz>0.1</izz>
-          </inertia>
-          <pose>0 0 0 0 -0 0</pose>
-        </inertial>
-        <collision name='collision'>
-          <pose>0 0 0 0 -0 1.6</pose>
-          <geometry>
-            <mesh>
-              <uri>model://ikea_urban_chair/meshes/mesh.dae</uri>
-            </mesh>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <pose>0 0 0 0 -0 1.6</pose>
-          <geometry>
-            <mesh>
-              <uri>model://ikea_urban_chair/meshes/mesh.dae</uri>
-            </mesh>
-          </geometry>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose>4.20539 0.254088 0 0 -0 0</pose>
-    </model>
-    <model name='ikea_urban_chair_0'>
-      <link name='link'>
-        <inertial>
-          <mass>10</mass>
-          <inertia>
-            <ixx>0</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>0</iyy>
-            <iyz>0</iyz>
-            <izz>0.1</izz>
-          </inertia>
-          <pose>0 0 0 0 -0 0</pose>
-        </inertial>
-        <collision name='collision'>
-          <pose>0 0 0 0 -0 1.6</pose>
-          <geometry>
-            <mesh>
-              <uri>model://ikea_urban_chair/meshes/mesh.dae</uri>
-            </mesh>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <pose>0 0 0 0 -0 1.6</pose>
-          <geometry>
-            <mesh>
-              <uri>model://ikea_urban_chair/meshes/mesh.dae</uri>
-            </mesh>
-          </geometry>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <pose>4.18534 -0.638003 0 0 -0 0</pose>
-    </model>
     <model name='bookshelf'>
       <static>1</static>
       <link name='link'>
@@ -3274,26 +3176,6 @@
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='ikea_urban_chair'>
-        <pose>4.33809 0.004139 0.023921 1e-06 -2.4e-05 -0.003294</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose>4.33809 0.004139 0.023921 1e-06 -2.4e-05 -0.003294</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.715488 -0.017562 2.55243 0.000716 0.065506 0</acceleration>
-          <wrench>-7.15488 -0.175624 25.5243 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='ikea_urban_chair_0'>
-        <pose>4.35551 -0.660834 0.02392 -1e-06 2.8e-05 0.000103</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose>4.35551 -0.660834 0.02392 -1e-06 2.8e-05 0.000103</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.699397 0.019545 2.38532 -0.000589 -0.002158 0</acceleration>
-          <wrench>6.99397 0.195452 23.8532 0 -0 0</wrench>
         </link>
       </model>
       <model name='lab table'>

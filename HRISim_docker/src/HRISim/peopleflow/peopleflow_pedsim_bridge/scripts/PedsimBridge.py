@@ -37,19 +37,12 @@ class PedsimBridge():
         """Load agents from the ROS parameter server."""
         agent_id = str(req.agent_id)
         agents_param = rospy.get_param(f'/peopleflow/agents/{agent_id}', None)
-    
-        if agent_id in AGENTS_CROSS:
-            schedule = SCHEDULE_CROSS
-        elif agent_id in AGENTS_POSTER:
-            schedule = SCHEDULE_POSTER
-        else:
-            schedule = SCHEDULE
-
         if agents_param is not None:
-            a = Agent.from_dict(agents_param, schedule, G, ALLOW_TASK, MAX_TASKTIME)
+            a = Agent.from_dict(agents_param, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME)
+            # a = Agent.from_dict(agents_param, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME, OBSTACLES)
         else:
-            a = Agent(agent_id, schedule, G, ALLOW_TASK, MAX_TASKTIME)
-
+            a = Agent(agent_id, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME)
+            # a = Agent(agent_id, SCHEDULE, G, ALLOW_TASK, MAX_TASKTIME, OBSTACLES)
         a.x = req.origin.x
         a.y = req.origin.y
         a.isStuck = req.is_stuck
@@ -61,37 +54,36 @@ class PedsimBridge():
              
     def handle_get_next_destination(self, req):
         try:
-            # Load agent from rosparam
             agent = self.load_agents(req)
-                        
-            # New goal logic                
-            if agent.isStuck or agent.isFree:
-                next_destination = agent.selectDestination(self.timeOfDay, req.destinations)
+
+            # ── OVERRIDE HRI ──────────────────────────────────────
+            override_key = f'/hrisim/override/{agent.id}/dest'
+            override_dest = rospy.get_param(override_key, None)
+            if override_dest is not None:
+                rospy.logwarn(f"[Bridge] HRI override agente {agent.id} → {override_dest}")
+                agent.setTask(override_dest, duration=30, isStuck=False)
+                rospy.delete_param(override_key)   # one-shot: consumato subito
+            # ─────────────────────────────────────────────────────
+            elif agent.isStuck or agent.isFree:
+                next_destination = agent.selectDestination(
+                    self.timeOfDay, req.destinations)
                 agent.setTask(next_destination, agent.getTaskDuration())
-            
-            elif not agent.isFree: 
+            elif not agent.isFree:
                 pass
-                                                                            
-            else:
-                rospy.logerr("THERE IS A CASE I DID NOT COVER:")
-                rospy.logerr(f"TOD {self.timeOfDay}")
-                rospy.logerr(f"elapsedTime {self.elapsedTime}")
-                rospy.logerr(f"Agent {agent.id}")
-                rospy.logerr(f"isFree {agent.isFree}")
-                rospy.logerr(f"isStuck {agent.isStuck}")
-                rospy.logerr(f"closestWP {agent.closestWP}")
-                
-            
-            # Response
-            wpname, wp = agent.nextWP         
+
+            wpname, wp = agent.nextWP
             agent.nextDestRadius = WPS[wpname]["r"] if wpname in WPS else 1.0
-            response = GetNextDestinationResponse(destination_id=wpname, 
-                                                  destination=wp, 
-                                                  destination_radius=WPS[wpname]["r"] if wpname in WPS else 1.0,
-                                                  task_duration=agent.taskDuration[wpname])
-            # Save agents to rosparam
+            response = GetNextDestinationResponse(
+                destination_id=wpname,
+                destination=wp,
+                destination_radius=WPS[wpname]["r"] if wpname in WPS else 1.0,
+                task_duration=agent.taskDuration[wpname])
             self.save_agents(agent)
             return response
+
+        except Exception as e:
+            rospy.logerr(f"Agent {req.agent_id} error: {str(e)}")
+            rospy.logerr(traceback.format_exc())
         
         except Exception as e:
             rospy.logerr(f"Time: {self.timeOfDay} - {self.elapsedTimeString}")
@@ -105,19 +97,6 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)  # 10 Hz
     
     SCHEDULE = ros_utils.wait_for_param("/peopleflow/schedule")
-
-    SCHEDULE_CROSS = {time_name: {
-        'dests': {k: v for k, v in time_data['dests'].items() if k in ['WP_CROSS']},
-        'duration': time_data['duration']
-    } for time_name, time_data in SCHEDULE.items()}
-
-    SCHEDULE_POSTER = {time_name: {
-        'dests': {k: v for k, v in time_data['dests'].items() if k in ['WP_POSTER_L', 'WP_POSTER_R']},
-        'duration': time_data['duration']
-    } for time_name, time_data in SCHEDULE.items()}
-
-    AGENTS_CROSS = ['4', '5', '6']
-    AGENTS_POSTER = ['0', '1', '2', '3']
     WPS = ros_utils.wait_for_param("/peopleflow/wps")
     ALLOW_TASK = rospy.get_param("~allow_task", False)
     MAX_TASKTIME = int(rospy.get_param("~max_tasktime"))
