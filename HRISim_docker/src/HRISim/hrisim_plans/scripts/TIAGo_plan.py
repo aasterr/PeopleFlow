@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Loop: SPAWN -> WP_OBS_FWD -> TABLE -> WP_OBS_BWD -> SPAWN
+Loop: SPAWN -> TABLE -> SPAWN -> TABLE -> ...
+Ogni singola traversata (SPAWN->TABLE o TABLE->SPAWN) e' un EPISODIO autonomo.
 A ogni WP_OBS: check congestione → se congesto emette azione → aspetta → procede.
 L'azione HRI inietta un nuovo path direttamente nei rosparam degli agenti.
 """
@@ -22,7 +23,7 @@ except:
 
 import pnp_cmd_ros
 from pnp_cmd_ros import *
-from std_msgs.msg import String, Int32
+from std_msgs.msg import String, Int32, Bool
 from pedsim_msgs.msg import AgentStates
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import actionlib
@@ -46,6 +47,10 @@ LOOK_AHEAD        = 3.0
 LOOK_BEHIND       = 0.5
 CORRIDOR_CENTER_Y = 0.0
 CORRIDOR_WIDTH    = 2.5
+_CROSS_CX = 0.0
+_CROSS_CY = -0.9
+_CROSS_RX = 1.5   # semi-larghezza asse X
+_CROSS_RY = 1.5   # semi-altezza  asse Y
 
 # ── Comportamento ────────────────────────────────────────────────────
 RECHECK_INTERVAL = 2.0
@@ -112,7 +117,7 @@ def navigate(p, start, end):
     path = path[1:]
 
     if not path:
-        rospy.loginfo("[TIAGo] Già a destinazione %s.", end)
+        rospy.loginfo("[TIAGo] Gia' a destinazione %s.", end)
         return
 
     for i, wp in enumerate(path):
@@ -173,15 +178,15 @@ def check_congestion(direction):
     return congested
 
 # ─────────────────────────────────────────────────────────────────────
-# INIEZIONE PATH AGENTI (nuova strategia)
+# INIEZIONE PATH AGENTI
 # ─────────────────────────────────────────────────────────────────────
 
 def _dist2d(x1, y1, x2, y2):
     return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
-def _classify_agent(ax, ay):
-    """Tutti gli agenti vanno sempre in CROSS_BACK."""
-    return 'WP_CROSS_BACK'
+def _in_cross_zone(ax, ay):
+    """True se l'agente e' nel rettangolo CROSS."""
+    return abs(ax - _CROSS_CX) <= _CROSS_RX and abs(ay - _CROSS_CY) <= _CROSS_RY
 
 def inject_waypoint(agent_id, target_wp):
     """
@@ -190,43 +195,23 @@ def inject_waypoint(agent_id, target_wp):
     """
     override_key = '/hrisim/override/{}/dest'.format(agent_id)
     rospy.set_param(override_key, target_wp)
-    rospy.loginfo("[inject] Agente %s: override → %s", agent_id, target_wp)
-    return True
-
-    pos = nx.get_node_attributes(G, 'pos')
-    closest = min(G.nodes, key=lambda wp: (pos[wp][0] - ax)**2 + (pos[wp][1] - ay)**2)
-
-    if closest == target_wp:
-        rospy.loginfo("[inject] Agente %s già a %s", agent_id, target_wp)
-        return True
-
-    try:
-        path = nx.astar_path(G, closest, target_wp, heuristic=heuristic, weight='weight')
-    except nx.NetworkXNoPath:
-        rospy.logwarn("[inject] Agente %s: nessun path %s -> %s", agent_id, closest, target_wp)
-        return False
-
-    task_duration = {wp: 0 for wp in path}
-    task_duration[target_wp] = duration
-
-    agent_data['path'] = path
-    agent_data['original_path'] = path[:]
-    agent_data['taskDuration'] = task_duration
-    agent_data['isStuck'] = False
-    rospy.set_param(param_key, agent_data)
-    rospy.loginfo("[inject] Agente %s: path iniettato %s -> %s", agent_id, closest, target_wp)
+    rospy.loginfo("[inject] Agente %s: override -> %s", agent_id, target_wp)
     return True
 
 def inject_agents_by_zone():
+    """
+    Inietta override WP_CROSS_BACK SOLO agli agenti attualmente
+    dentro la zona CROSS. Gli agenti fuori zona non vengono toccati.
+    """
     moved = 0
     for agent in LAST_AGENTS:
-        aid = str(agent.id)   # assicurati sia stringa come nel rosparam
         ax = agent.pose.position.x
         ay = agent.pose.position.y
-        target = _classify_agent(ax, ay)
-        if target is None:
+        if not _in_cross_zone(ax, ay):
+            rospy.loginfo("[inject] Agente %s fuori zona CROSS (%.2f, %.2f), skip",
+                          agent.id, ax, ay)
             continue
-        inject_waypoint(aid, target)
+        inject_waypoint(str(agent.id), 'WP_CROSS_BACK')
         moved += 1
     rospy.loginfo("[inject] %d override impostati", moved)
 
@@ -264,30 +249,38 @@ def emit_action(action_val):
         inject_agents_by_zone()
 
 # ─────────────────────────────────────────────────────────────────────
-# MEZZA TRATTA
+# MEZZA TRATTA  (= un episodio)
 # ─────────────────────────────────────────────────────────────────────
 
-def run_half(p, episode_num, start, obs_wp, end, direction):
-    rospy.loginfo("[TIAGo] ── %s: %s → %s ──", direction, start, end)
+def run_half(p, episode_num, start, obs_wp, end, direction,
+             episode_start_pub, episode_end_pub, people_cleared_pub, transit_pub):
+    """
+    Esegue una singola traversata e la tratta come episodio autonomo:
+      1. Pubblica episode_start
+      2. Naviga fino a obs_wp, controlla congestione, eventuale azione HRI
+      3. Pubblica robot_transit e procede verso end
+      4. Pubblica episode_end  ← gli ostacoli vengono rimossi qui da obstacle_policy
+    """
+    rospy.loginfo("[TIAGo] ══════ EPISODIO %d | %s: %s -> %s ══════",
+                  episode_num, direction, start, end)
+
+    episode_start_pub.publish(Int32(episode_num))
 
     navigate(p, start, obs_wp)
     rospy.sleep(0.5)
 
     congested = check_congestion(direction)
-
     if congested:
         rospy.loginfo("[TIAGo] Congesto! Emetto azione e aspetto...")
         A = choose_action(episode_num)
         emit_action(A)
         last_action_time = rospy.Time.now()
-
-        # Breve attesa per far processare il nuovo path dal bridge
         rospy.sleep(2.0)
-
         while not rospy.is_shutdown():
             rospy.sleep(RECHECK_INTERVAL)
             if not check_congestion(direction):
                 rospy.loginfo("[TIAGo] Corridoio libero! Procedo.")
+                people_cleared_pub.publish(Bool(True))
                 break
             if A == 1 and (rospy.Time.now() - last_action_time) > rospy.Duration(10.0):
                 rospy.loginfo("[TIAGo] Ri-inietto path agenti")
@@ -298,7 +291,11 @@ def run_half(p, episode_num, start, obs_wp, end, direction):
     else:
         rospy.loginfo("[TIAGo] Corridoio libero, procedo direttamente.")
 
+    transit_pub.publish(Bool(True))
     navigate(p, obs_wp, end)
+
+    episode_end_pub.publish(Int32(episode_num))
+    rospy.sleep(1.0)   # piccola pausa tra episodi per dare tempo al remove in Gazebo
 
 # ─────────────────────────────────────────────────────────────────────
 # PLAN PRINCIPALE
@@ -325,17 +322,27 @@ def Plan(p):
     rospy.loginfo("[TIAGo] GAP_MIN=%.2f | LOOK_AHEAD=%.1f | POLICY=%s | RECHECK=%.1fs",
                   GAP_MIN, LOOK_AHEAD, ACTION_POLICY, RECHECK_INTERVAL)
 
+    episode_start_pub  = rospy.Publisher("/hrisim/episode_start",  Int32, queue_size=1)
+    episode_end_pub    = rospy.Publisher("/hrisim/episode_end",    Int32, queue_size=1)
+    people_cleared_pub = rospy.Publisher("/hrisim/people_cleared", Bool,  queue_size=1)
+    transit_pub        = rospy.Publisher("/hrisim/robot_transit",  Bool,  queue_size=1)
+    rospy.sleep(0.5)
+
     episode = 0
     while not rospy.is_shutdown():
+        # Traversata FWD: SPAWN -> TABLE  (episodio dispari)
         episode += 1
-        rospy.loginfo("[TIAGo] ══════ EPISODIO %d ══════", episode)
+        run_half(p, episode,
+                 start=POINT_A, obs_wp=WP_OBS_FWD, end=POINT_B, direction="FWD",
+                 episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
+                 people_cleared_pub=people_cleared_pub, transit_pub=transit_pub)
 
-        run_half(p, episode, start=POINT_A, obs_wp=WP_OBS_FWD,
-                 end=POINT_B, direction="FWD")
-        run_half(p, episode, start=POINT_B, obs_wp=WP_OBS_BWD,
-                 end=POINT_A, direction="BWD")
-
-        rospy.sleep(1.0)
+        # Traversata BWD: TABLE -> SPAWN  (episodio pari)
+        episode += 1
+        run_half(p, episode,
+                 start=POINT_B, obs_wp=WP_OBS_BWD, end=POINT_A, direction="BWD",
+                 episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
+                 people_cleared_pub=people_cleared_pub, transit_pub=transit_pub)
 
     rospy.set_param("/peopleflow/robot_plan_on", False)
 
@@ -352,9 +359,9 @@ if __name__ == "__main__":
 
     TIME_THRESHOLD = ros_utils.wait_for_param("/hrisim/abort_time_threshold")
 
-    rospy.Subscriber("/hrisim/robot_closest_wp",   String,                   cb_robot_closest_wp)
-    rospy.Subscriber("/pedsim_simulator/simulated_agents", AgentStates,      cb_agents, queue_size=1)
-    rospy.Subscriber("/robot_pose",                PoseWithCovarianceStamped, cb_robot_pose, queue_size=1)
+    rospy.Subscriber("/hrisim/robot_closest_wp",              String,                    cb_robot_closest_wp)
+    rospy.Subscriber("/pedsim_simulator/simulated_agents",    AgentStates,               cb_agents, queue_size=1)
+    rospy.Subscriber("/robot_pose",                           PoseWithCovarianceStamped, cb_robot_pose, queue_size=1)
 
     action_pub = rospy.Publisher("/hrisim/robot_action", Int32, queue_size=1)
 
