@@ -104,6 +104,7 @@ windows:
     panes:
       - 'roslaunch robot_battery sim_battery.launch init_battery:=$INIT_BATTERY static_duration:=$STATIC_DURATION dynamic_duration:=$DYNAMIC_DURATION charging_time:=$CHARGING_TIME'
       - 'rosrun robot_task TaskInfoManager.py'
+      - 'roslaunch pmb2_led_control pmb2_led_control.launch'
   - name: planning
     tags: ['core']
     panes:
@@ -113,3 +114,8 @@ windows:
     tags: ['exp']
     panes:
       - 'roslaunch peopleflow_bringup peopleflow_bringup.launch scenario:=$SCENARIO starting_elapsed:=$STARTING_ELAPSED allow_task:=$ALLOW_TASK max_tasktime:=$MAX_TASKTIME robot_mode:=$ROBOT_MODE max_human_speed:=$MAX_HUMAN_SPEED robot_radius:=$ROBOT_RADIUS is_stuck_threshold:=$IS_STUCK_THRESHOLD force_obstacle:=$FORCE_OBSTACLE sigma_obstacle:=$SIGMA_OBSTACLE force_social:=$FORCE_SOCIAL'
+  - name: obstacles
+    tags: ['exp']
+    panes:
+      - 'roscd hrisim_plans/scripts && python DynamicObstacle.py'
+      - 'roscd hrisim_plans/scripts && python obstacle_policy.py _p1:=0.5 _p2:=0.5 _o1_x:=0.0 _o1_y:=1.0'

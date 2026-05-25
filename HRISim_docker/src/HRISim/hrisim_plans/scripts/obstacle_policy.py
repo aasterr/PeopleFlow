@@ -34,8 +34,6 @@ Parametri ROS (privati, passare con _param:=val):
   ~cross_rx   float  [1.5]   semi-larghezza zona CROSS sull'asse X
   ~cross_ry   float  [1.5]   semi-altezza  zona CROSS sull'asse Y
 
-Avvio esempio:
-  python obstacle_policy.py _p1:=0.5 _p2:=0.5 _o1_x:=0.0 _o1_y:=0.8
 """
 
 import rospy

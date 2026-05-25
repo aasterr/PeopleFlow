@@ -81,7 +81,7 @@ WORKDIR /home/hrisim/tiago_ws
 
 # Download tiago_public-noetic.rosinstall and clone required repositories
 # Clone the complete, stable source code from your personal GitHub repo
-RUN git clone https://github.com/lcastri/mytiago_src.git /home/hrisim/tiago_ws/src
+RUN git clone -b LEDs https://github.com/lcastri/mytiago_src.git /home/hrisim/tiago_ws/src
 
 # Run user-level rosdep commands and install dependencies
 RUN rosdep update --include-eol-distros && \

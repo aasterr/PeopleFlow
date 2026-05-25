@@ -31,7 +31,7 @@ class DynamicObstacleSpawner:
 
         # Modello SDF
         self.model_path = os.path.expanduser(
-            "/home/hrisim/.gazebo/models/Digital_Camo_Double_Decker_Lunch_Bag/model.sdf")
+            "/home/hrisim/.gazebo/models/Suitcase1H/model.sdf")
         with open(self.model_path, "r") as f:
             self.model_xml = f.read()
 
@@ -71,7 +71,7 @@ class DynamicObstacleSpawner:
         pose = Pose()
         pose.position.x = x
         pose.position.y = y
-        pose.position.z = 0.5
+        pose.position.z = 0.0
 
         try:
             self.spawn_srv(model_name, self.model_xml, "", pose, "world")
