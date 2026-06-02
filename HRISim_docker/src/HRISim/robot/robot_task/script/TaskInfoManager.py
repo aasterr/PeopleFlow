@@ -18,9 +18,9 @@ class RobotTaskManager():
         self.tasks_msg.header = Header()
         self.tasks_msg.Tasks = []
         
-        # Define ROS services
-        rospy.Service('/hrisim/new_task', NewTask, self.new_task_cb)
-        rospy.Service('/hrisim/finish_task', FinishTask, self.finish_task_cb)
+        # Define ROS services - chiamo dentro plan 
+        rospy.Service('/hrisim/new_task', NewTask, self.new_task_cb) #chiamo dentro run half
+        rospy.Service('/hrisim/finish_task', FinishTask, self.finish_task_cb) # quando fallisce o arriva a destinazione
     
     @property        
     def next_taskID(self):

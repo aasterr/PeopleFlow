@@ -4,6 +4,7 @@
 import math
 import os
 import pickle
+import random
 import sys
 
 import rospy
@@ -40,13 +41,17 @@ LOOK_BEHIND       = 0.5
 CORRIDOR_CENTER_Y = 0.0
 CORRIDOR_WIDTH    = 2.5
 _CROSS_CX         = 0.0
-_CROSS_CY         = -0.9
-_CROSS_RX         = 1.5
+_CROSS_CY         = -0.2
+_CROSS_RX         = 1.0
 _CROSS_RY         = 1.5
 
 # ── Comportamento ────────────────────────────────────────────────────
-RECHECK_INTERVAL = 2.0
-ACTION_POLICY    = "always_act"  # "always_act" | "never_act" | "alternate"
+RECHECK_INTERVAL  = 2.0
+ACTION_POLICY     = "alternate"  # "always_act" | "never_act" | "alternate" - 
+ARRIVAL_TOLERANCE = 0.8           # distanza massima (m) per considerare il robot arrivato
+
+# ── Reiniezione: waypoint candidati per reinject dopo ogni episodio ──
+_REINJECT_WPS = ['WP_CROSS', 'WP_POSTER_L', 'WP_POSTER_R']
 
 # ── Stato globale ────────────────────────────────────────────────────
 LAST_AGENTS      = []
@@ -107,6 +112,17 @@ def navigate(p, start, end):
         next_wp = path[i+1] if i < len(path)-1 else None
         send_goal(p, wp, next_dest=next_wp, prev_dest=prev_wp)
     rospy.loginfo("[TIAGo] Arrivato a %s.", end)
+
+def _reached(target_wp):
+    rx, ry = ROBOT_XY
+    if rx is None:
+        rospy.logwarn("[TIAGo] Posizione robot non disponibile, assumo NON arrivato.")
+        return False
+    pos = nx.get_node_attributes(G, 'pos')
+    tx, ty = pos[target_wp]
+    dist = math.sqrt((rx - tx)**2 + (ry - ty)**2)
+    rospy.loginfo("[TIAGo] Distanza da %s: %.2f m (tol=%.2f)", target_wp, dist, ARRIVAL_TOLERANCE)
+    return dist <= ARRIVAL_TOLERANCE
 
 # ─────────────────────────────────────────────────────────────────────
 # CHECK CONGESTIONE
@@ -178,11 +194,13 @@ def inject_agents_by_zone():
         _injected_agents.add(str(agent.id))
         moved += 1
     rospy.loginfo("[inject] %d override impostati verso WP_CROSS_BACK", moved)
-    
+
 def reinject_agents_to_cross():
     for aid in _injected_agents:
-        inject_waypoint(aid, 'WP_CROSS')
-    rospy.loginfo("[inject] %d agenti reiniettati verso WP_CROSS", len(_injected_agents))
+        dest = random.choice(_REINJECT_WPS)
+        inject_waypoint(aid, dest)
+    rospy.loginfo("[inject] %d agenti reiniettati (random tra %s)",
+                  len(_injected_agents), _REINJECT_WPS)
 
 def wait_for_agent_in_cross(timeout=60.0):
     if not _injected_agents:
@@ -243,6 +261,7 @@ def run_half(p, episode_num, start, obs_wp, end, direction,
     rospy.loginfo("[TIAGo] ── EPISODIO %d | %s: %s -> %s ──", episode_num, direction, start, end)
 
     episode_start_pub.publish(Int32(episode_num))
+    # task_id = new_task_service(NEXT_GOAL, QUEUE, tot_inf_time, mean_inf_time, planning_time, evaluations).task_id
     navigate(p, start, obs_wp)
     rospy.sleep(0.5)
 
@@ -266,8 +285,23 @@ def run_half(p, episode_num, start, obs_wp, end, direction,
 
     transit_pub.publish(Bool(True))
     navigate(p, obs_wp, end)
+
+    T = 1 if _reached(end) else 0
+    rospy.loginfo("[TIAGo] Episodio %d | T=%d", episode_num, T)
+
+    if T == 0:
+        rospy.logwarn("[TIAGo] Episodio %d FALLITO — recovery verso %s", episode_num, start)
+        navigate(p, ROBOT_CLOSEST_WP, start)
+        episode_end_pub.publish(Int32(episode_num))  # despawna ostacoli
+        rospy.loginfo("[TIAGo] Recovery completato, robot a %s", start)
+        # finish_task_service(task_id, constants.TaskResult.FAILURE.value)
+        return False  # segnala fallimento al loop
+        
+    # finish_task_service(task_id, constants.TaskResult.SUCCESS.value)
+
     episode_end_pub.publish(Int32(episode_num))
     rospy.sleep(1.0)
+    return True  # segnala successo al loop
 
 # ─────────────────────────────────────────────────────────────────────
 # PLAN
@@ -280,6 +314,10 @@ def Plan(p):
     ros_utils.wait_for_service('/hrisim/finish_task')
     rospy.set_param('/hrisim/robot_busy', False)
     rospy.set_param("/peopleflow/robot_plan_on", True)
+    
+    # new_task_service = rospy.ServiceProxy('/hrisim/new_task', NewTask)
+    # finish_task_service = rospy.ServiceProxy('/hrisim/finish_task', FinishTask)
+    # TOPIC self.tasks_info_pub = rospy.Publisher('/hrisim/robot_tasks_info', TasksInfo, queue_size=10) x success rate etc
 
     while ROBOT_CLOSEST_WP is None:
         rospy.sleep(0.1)
@@ -295,21 +333,35 @@ def Plan(p):
     transit_pub        = rospy.Publisher("/hrisim/robot_transit",  Bool,  queue_size=1)
     rospy.sleep(0.5)
 
+    current_pos = POINT_A  # posizione logica iniziale
+
     episode = 0
     while not rospy.is_shutdown():
+        # Determina destinazione e waypoint in base alla posizione corrente
+        if current_pos == POINT_A:
+            next_pos  = POINT_B
+            obs_wp    = WP_OBS_FWD
+            direction = "FWD"
+        else:
+            next_pos  = POINT_A
+            obs_wp    = WP_OBS_BWD
+            direction = "BWD"
+
         episode += 1
-        run_half(p, episode, start=POINT_A, obs_wp=WP_OBS_FWD, end=POINT_B, direction="FWD",
-                 episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
-                 people_cleared_pub=people_cleared_pub, transit_pub=transit_pub)
+        success = run_half(
+            p, episode,
+            start=current_pos, obs_wp=obs_wp, end=next_pos, direction=direction,
+            episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
+            people_cleared_pub=people_cleared_pub, transit_pub=transit_pub
+        )
+
         reinject_agents_to_cross()
         wait_for_agent_in_cross()
 
-        episode += 1
-        run_half(p, episode, start=POINT_B, obs_wp=WP_OBS_BWD, end=POINT_A, direction="BWD",
-                 episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
-                 people_cleared_pub=people_cleared_pub, transit_pub=transit_pub)
-        reinject_agents_to_cross()
-        wait_for_agent_in_cross()
+        # Aggiorna posizione logica solo se l'episodio è riuscito
+        if success:
+            current_pos = next_pos
+        # Se fallito, current_pos resta invariata: il robot è tornato a start
 
     rospy.set_param("/peopleflow/robot_plan_on", False)
 
