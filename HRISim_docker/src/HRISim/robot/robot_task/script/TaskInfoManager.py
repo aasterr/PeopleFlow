@@ -35,7 +35,7 @@ class RobotTaskManager():
             # Assume task has a 'status' attribute that indicates success or failure
             if task.result == constants.TaskResult.SUCCESS.value:
                 num_success += 1
-            elif task.result in [constants.TaskResult.FAILURE.value, constants.TaskResult.CRITICAL_BATTERY.value]:
+            elif task.result == constants.TaskResult.FAILURE.value:
                 num_failure += 1
             
         self.tasks_msg.num_tasks = len(self.tasks_msg.Tasks)

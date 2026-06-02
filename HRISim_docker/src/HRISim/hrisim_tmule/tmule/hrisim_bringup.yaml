@@ -118,4 +118,4 @@ windows:
     tags: ['exp']
     panes:
       - 'roscd hrisim_plans/scripts && python DynamicObstacle.py'
-      - 'roscd hrisim_plans/scripts && python obstacle_policy.py _p1:=0.5 _p2:=0.5 _o1_x:=0.0 _o1_y:=1.0'
+      - 'roscd hrisim_plans/scripts && python obstacle_policy.py'

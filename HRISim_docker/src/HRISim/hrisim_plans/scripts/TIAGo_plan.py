@@ -19,6 +19,8 @@ import pnp_cmd_ros
 from pnp_cmd_ros import *
 from std_msgs.msg import String, Int32, Bool
 from std_srvs.srv import SetBool
+from robot_srvs.srv import NewTask, FinishTask
+import hrisim_util.constants as constants
 from pedsim_msgs.msg import AgentStates
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import hrisim_util.ros_utils as ros_utils
@@ -257,11 +259,13 @@ def emit_action(action_val):
 # ─────────────────────────────────────────────────────────────────────
 
 def run_half(p, episode_num, start, obs_wp, end, direction,
-             episode_start_pub, episode_end_pub, people_cleared_pub, transit_pub):
+             episode_start_pub, episode_end_pub, people_cleared_pub, transit_pub,
+             new_task_srv, finish_task_srv):
     rospy.loginfo("[TIAGo] ── EPISODIO %d | %s: %s -> %s ──", episode_num, direction, start, end)
 
     episode_start_pub.publish(Int32(episode_num))
-    # task_id = new_task_service(NEXT_GOAL, QUEUE, tot_inf_time, mean_inf_time, planning_time, evaluations).task_id
+    task_resp = new_task_srv(path=[start, end], final_destination=end)
+    task_id   = task_resp.task_id
     navigate(p, start, obs_wp)
     rospy.sleep(0.5)
 
@@ -290,18 +294,17 @@ def run_half(p, episode_num, start, obs_wp, end, direction,
     rospy.loginfo("[TIAGo] Episodio %d | T=%d", episode_num, T)
 
     if T == 0:
+        finish_task_srv(task_id=task_id, result=constants.TaskResult.FAILURE.value)
         rospy.logwarn("[TIAGo] Episodio %d FALLITO — recovery verso %s", episode_num, start)
         navigate(p, ROBOT_CLOSEST_WP, start)
-        episode_end_pub.publish(Int32(episode_num))  # despawna ostacoli
+        episode_end_pub.publish(Int32(episode_num))
         rospy.loginfo("[TIAGo] Recovery completato, robot a %s", start)
-        # finish_task_service(task_id, constants.TaskResult.FAILURE.value)
-        return False  # segnala fallimento al loop
+        return False
         
-    # finish_task_service(task_id, constants.TaskResult.SUCCESS.value)
-
+    finish_task_srv(task_id=task_id, result=constants.TaskResult.SUCCESS.value)
     episode_end_pub.publish(Int32(episode_num))
     rospy.sleep(1.0)
-    return True  # segnala successo al loop
+    return True
 
 # ─────────────────────────────────────────────────────────────────────
 # PLAN
@@ -312,11 +315,11 @@ def Plan(p):
         rospy.sleep(0.1)
     ros_utils.wait_for_service('/hrisim/new_task')
     ros_utils.wait_for_service('/hrisim/finish_task')
+    new_task_srv    = rospy.ServiceProxy('/hrisim/new_task',    NewTask)
+    finish_task_srv = rospy.ServiceProxy('/hrisim/finish_task', FinishTask)
     rospy.set_param('/hrisim/robot_busy', False)
     rospy.set_param("/peopleflow/robot_plan_on", True)
     
-    # new_task_service = rospy.ServiceProxy('/hrisim/new_task', NewTask)
-    # finish_task_service = rospy.ServiceProxy('/hrisim/finish_task', FinishTask)
     # TOPIC self.tasks_info_pub = rospy.Publisher('/hrisim/robot_tasks_info', TasksInfo, queue_size=10) x success rate etc
 
     while ROBOT_CLOSEST_WP is None:
@@ -352,7 +355,8 @@ def Plan(p):
             p, episode,
             start=current_pos, obs_wp=obs_wp, end=next_pos, direction=direction,
             episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
-            people_cleared_pub=people_cleared_pub, transit_pub=transit_pub
+            people_cleared_pub=people_cleared_pub, transit_pub=transit_pub,
+            new_task_srv=new_task_srv, finish_task_srv=finish_task_srv
         )
 
         reinject_agents_to_cross()

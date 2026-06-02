@@ -45,8 +45,9 @@ spawn_pub  = None
 remove_pub = None
 
 # ── Parametri (aggiornati in main) ───────────────────────────────────
-N_MAX    = 8
+N_MAX    = 5
 MIN_DIST = 0.6  # distanza minima da agenti per spawn ostacolo
+P_EMPTY = 0.5 # P(O) = 0.5
 
 # ── Snapshot agenti ──────────────────────────────────────────────────
 _last_agents = {}   # {agent_id (int) -> (x, y)}
@@ -150,7 +151,12 @@ def cb_episode_start(msg):
     # Snapshot fresco prima di campionare
     _get_fresh_agents(timeout=0.5)
 
-    n = random.randint(0, N_MAX)
+    # n = random.randint(0, N_MAX)
+    if random.random() < P_EMPTY:
+        n = 0
+    else:
+        n = random.randint(1, N_MAX)
+        
     rospy.loginfo(
         "[ObstaclePolicy] ── Episodio %d START | N_intended=%d ──",
         episode_num, n
@@ -196,6 +202,7 @@ if __name__ == "__main__":
 
     N_MAX    = int(rospy.get_param("~n_max",    N_MAX))
     MIN_DIST = float(rospy.get_param("~min_dist", MIN_DIST))
+    P_EMPTY  = float(rospy.get_param("~p_empty", P_EMPTY))
 
     rospy.loginfo("[ObstaclePolicy] Avviato | n_max=%d | min_dist=%.2f", N_MAX, MIN_DIST)
     rospy.loginfo(
