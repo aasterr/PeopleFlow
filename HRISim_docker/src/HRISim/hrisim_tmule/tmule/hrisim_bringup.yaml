@@ -35,7 +35,7 @@ init_cmd: |
   export_default STATIC_DURATION "5"
   export_default DYNAMIC_DURATION "4"
   export_default CHARGING_TIME "2"
-  export_default ABORT_TIME_THRESHOLD "45"
+  export_default ABORT_TIME_THRESHOLD "30"
 
   # world arguments
   # choose a map between: maze, maze_corridor, maze_corridor_withTurn, maze_corridor_withDoors
@@ -119,3 +119,7 @@ windows:
     panes:
       - 'roscd hrisim_plans/scripts && python DynamicObstacle.py'
       - 'roscd hrisim_plans/scripts && python obstacle_policy.py'
+  - name: recording
+    tags: ['exp']
+    panes:
+      - 'roscd hrisim_recording/scripts && python record.py'

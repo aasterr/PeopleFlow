@@ -63,6 +63,7 @@ action_pub       = None
 G                = None
 TIME_THRESHOLD   = None
 _injected_agents = set()
+CURRENT_O        = 0
 
 # ─────────────────────────────────────────────────────────────────────
 # CALLBACKS
@@ -79,6 +80,10 @@ def cb_robot_closest_wp(msg):
 def cb_robot_pose(msg):
     global ROBOT_XY
     ROBOT_XY = (msg.pose.pose.position.x, msg.pose.pose.position.y)
+    
+def cb_O(msg):
+    global CURRENT_O
+    CURRENT_O = msg.data
 
 # ─────────────────────────────────────────────────────────────────────
 # NAVIGAZIONE
@@ -252,7 +257,7 @@ def emit_action(action_val):
             rospy.loginfo("[TIAGo] LED blink completato")
         except Exception as e:
             rospy.logwarn("[TIAGo] LED blink fallito: %s", e)
-        inject_agents_by_zone()
+        # inject_agents_by_zone() rimosso
 
 # ─────────────────────────────────────────────────────────────────────
 # EPISODIO
@@ -260,7 +265,7 @@ def emit_action(action_val):
 
 def run_half(p, episode_num, start, obs_wp, end, direction,
              episode_start_pub, episode_end_pub, people_cleared_pub, transit_pub,
-             new_task_srv, finish_task_srv):
+             S_pub, T_pub, new_task_srv, finish_task_srv):
     rospy.loginfo("[TIAGo] ── EPISODIO %d | %s: %s -> %s ──", episode_num, direction, start, end)
 
     episode_start_pub.publish(Int32(episode_num))
@@ -287,16 +292,20 @@ def run_half(p, episode_num, start, obs_wp, end, direction,
     else:
         rospy.loginfo("[TIAGo] Corridoio libero, procedo direttamente.")
 
+    S_final = 0 if (check_congestion(direction) or CURRENT_O == 1) else 1
+    S_pub.publish(Int32(S_final))
     transit_pub.publish(Bool(True))
     navigate(p, obs_wp, end)
 
     T = 1 if _reached(end) else 0
+    T_pub.publish(Int32(T))
     rospy.loginfo("[TIAGo] Episodio %d | T=%d", episode_num, T)
 
     if T == 0:
         finish_task_srv(task_id=task_id, result=constants.TaskResult.FAILURE.value)
         rospy.logwarn("[TIAGo] Episodio %d FALLITO — recovery verso %s", episode_num, start)
-        navigate(p, ROBOT_CLOSEST_WP, start)
+        recovery_wp = ROBOT_CLOSEST_WP
+        navigate(p, recovery_wp, start)
         episode_end_pub.publish(Int32(episode_num))
         rospy.loginfo("[TIAGo] Recovery completato, robot a %s", start)
         return False
@@ -334,6 +343,8 @@ def Plan(p):
     episode_end_pub    = rospy.Publisher("/hrisim/episode_end",    Int32, queue_size=1)
     people_cleared_pub = rospy.Publisher("/hrisim/people_cleared", Bool,  queue_size=1)
     transit_pub        = rospy.Publisher("/hrisim/robot_transit",  Bool,  queue_size=1)
+    S_pub              = rospy.Publisher("/hrisim/obs/S", Int32, queue_size=1)
+    T_pub              = rospy.Publisher("/hrisim/obs/T", Int32, queue_size=1)
     rospy.sleep(0.5)
 
     current_pos = POINT_A  # posizione logica iniziale
@@ -356,6 +367,7 @@ def Plan(p):
             start=current_pos, obs_wp=obs_wp, end=next_pos, direction=direction,
             episode_start_pub=episode_start_pub, episode_end_pub=episode_end_pub,
             people_cleared_pub=people_cleared_pub, transit_pub=transit_pub,
+            S_pub=S_pub, T_pub=T_pub,
             new_task_srv=new_task_srv, finish_task_srv=finish_task_srv
         )
 
@@ -385,6 +397,7 @@ if __name__ == "__main__":
     rospy.Subscriber("/hrisim/robot_closest_wp",           String,                    cb_robot_closest_wp)
     rospy.Subscriber("/pedsim_simulator/simulated_agents", AgentStates,               cb_agents, queue_size=1)
     rospy.Subscriber("/robot_pose",                        PoseWithCovarianceStamped, cb_robot_pose, queue_size=1)
+    rospy.Subscriber("/hrisim/obs/O", Int32, cb_O)
 
     action_pub = rospy.Publisher("/hrisim/robot_action", Int32, queue_size=1)
 

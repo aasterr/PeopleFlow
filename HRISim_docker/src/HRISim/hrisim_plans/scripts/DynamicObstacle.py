@@ -5,7 +5,7 @@ DynamicObstacle.py
 ==================
 Spawna e rimuove ostacoli in Gazebo tramite topic ROS.
 
-Spawn:  /hrisim/obstacles/spawn  (String)  →  "ID:x:y"
+Spawn:  /hrisim/obstacles/spawn  (String)  →  "ID❌y"
 Remove: /hrisim/obstacles/remove (String)  →  "ID" | "ALL"
 
 Esempi:
@@ -20,6 +20,7 @@ import os
 from gazebo_msgs.srv import SpawnModel, DeleteModel
 from geometry_msgs.msg import Pose
 from std_msgs.msg import String
+from std_srvs.srv import Trigger, TriggerResponse
 
 
 class DynamicObstacleSpawner:
@@ -51,7 +52,7 @@ class DynamicObstacleSpawner:
 
     def cb_spawn(self, msg):
         """
-        Payload atteso: "ID:x:y"
+        Payload atteso: "ID❌y"
         Es: "O1:0.0:1.2"  |  "O2_4:-0.3:0.8"
         """
         try:
