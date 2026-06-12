@@ -368,3 +368,8 @@ dist/
 *.bak
 *.bak2
 pickle
+
+HRISim_docker/src/HRISim/hrisim_gazebo/tiago_maps/pal_office/
+HRISim_docker/src/HRISim/hrisim_gazebo/tiago_maps/pal_office_7th_floor/
+HRISim_docker/src/HRISim/hrisim_gazebo/tiago_maps/simple_office/
+HRISim_docker/src/HRISim/hrisim_gazebo/tiago_maps/small_office/

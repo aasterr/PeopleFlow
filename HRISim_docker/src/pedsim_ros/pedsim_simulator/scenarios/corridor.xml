@@ -960,46 +960,41 @@
 <waypoint id="WP_TABLE"      x="3.5"  y="0.0"  r="0.5"/>
 <waypoint id="WP_SPAWN"      x="-6.0" y="0.0"  r="0.5"/>
 <waypoint id="WP_CROSS_BACK" x="0.0"  y="-4.0" r="0.5"/>
-<waypoint id="WP_WALL_L"     x="-0.6" y="1.0"  r="0.2"/>
-<waypoint id="WP_WALL_R"     x="0.6"  y="1.0"  r="0.2"/>
+
 
 <!-- 2 persone POSTER -->
 <agent x="-0.3" y="-8.5" n="1" dx="0.3" dy="0.3" type="1" vmax="0.2">
   <addwaypoint id="WP_BOTTOM"/>
   <addwaypoint id="WP_POSTER_L"/>
+  <addwaypoint id="WP_POSTER_R"/>
   <addwaypoint id="WP_CROSS_BACK"/>
-  <addwaypoint id="WP_WALL_L"/>
-  <addwaypoint id="WP_WALL_R"/>
 </agent>
 <agent x="0.2" y="-8.4" n="1" dx="0.3" dy="0.3" type="1" vmax="0.2">
   <addwaypoint id="WP_BOTTOM"/>
   <addwaypoint id="WP_POSTER_R"/>
+  <addwaypoint id="WP_POSTER_L"/>
   <addwaypoint id="WP_CROSS_BACK"/>
-  <addwaypoint id="WP_WALL_L"/>
-  <addwaypoint id="WP_WALL_R"/>
 </agent>
 
-<!-- 1 persona BOTTOM↔CROSS -->
+<!-- 1 persona BOTTOM↔CROSS o CENTRE -->
 <agent x="0.0" y="-8.5" n="1" dx="0.3" dy="0.3" type="1" vmax="0.3">
   <addwaypoint id="WP_BOTTOM"/>
   <addwaypoint id="WP_CROSS"/>
   <addwaypoint id="WP_CROSS_BACK"/>
-  <addwaypoint id="WP_WALL_L"/>
-  <addwaypoint id="WP_WALL_R"/>
+  <addwaypoint id="WP_CENTRE"/>
 </agent>
 
 <!-- 2 persone fisse a CROSS -->
-<agent x="-0.5" y="-1.2" n="1" dx="0.2" dy="0.2" type="1" vmax="0.1">
+<agent x="-0.5" y="-1.2" n="1" dx="0.2" dy="0.2" type="1" vmax="0.3">
   <addwaypoint id="WP_CROSS"/>
   <addwaypoint id="WP_CROSS_BACK"/>
-  <addwaypoint id="WP_WALL_L"/>
-  <addwaypoint id="WP_WALL_R"/>
+  <addwaypoint id="WP_BOTTOM"/>
 </agent>
-<agent x="0.5" y="-0.9" n="1" dx="0.2" dy="0.2" type="1" vmax="0.1">
+
+<agent x="0.5" y="-0.9" n="1" dx="0.2" dy="0.2" type="1" vmax="0.3">
   <addwaypoint id="WP_CROSS"/>
   <addwaypoint id="WP_CROSS_BACK"/>
-  <addwaypoint id="WP_WALL_L"/>
-  <addwaypoint id="WP_WALL_R"/>
+  <addwaypoint id="WP_BOTTOM"/>
 </agent>
 
 <!-- TIAGo -->
@@ -1011,15 +1006,13 @@
     <adddest name="WP_POSTER_L"   p="0.10" std="0"/>
     <adddest name="WP_POSTER_R"   p="0.10" std="0"/>
     <adddest name="WP_BOTTOM"     p="0.15" std="0"/>
-    <adddest name="WP_CROSS"      p="0.3"  std="0"/>
+    <adddest name="WP_CROSS"      p="0.30" std="0"/>
     <adddest name="WP_CROSS_BACK" p="0.01" std="0"/>
-    <adddest name="WP_CENTRE"     p="0.0"  std="0"/>
+    <adddest name="WP_CENTRE"     p="0.15" std="0"/>
     <adddest name="WP_OBS_FWD"    p="0.0"  std="0"/>
     <adddest name="WP_OBS_BWD"    p="0.0"  std="0"/>
     <adddest name="WP_SPAWN"      p="0.0"  std="0"/>
     <adddest name="WP_TABLE"      p="0.0"  std="0"/>
-    <adddest name="WP_WALL_L"     p="0.01" std="0"/>
-    <adddest name="WP_WALL_R"     p="0.01" std="0"/>
   </time>
 </schedule>
 

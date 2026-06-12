@@ -7,27 +7,20 @@ import math
 from std_msgs.msg import Int32, String, Bool
 from pedsim_msgs.msg import AgentStates
 
-# ── Publisher globali ────────────────────────────────────────────────
 spawn_pub  = None
 remove_pub = None
 O_pub      = None
 ready_pub  = None
+obs_pos_pub = None
 
-# ── Parametri (aggiornati in main) ───────────────────────────────────
 N_MAX    = 7
 MIN_DIST = 0.6  # distanza minima da agenti per spawn ostacolo
-P_EMPTY = 0.4 # P(O=0) = 0.4
+P_EMPTY  = 0.7  # P(O=0) = 0.7
 
-# ── Snapshot agenti ──────────────────────────────────────────────────
 _last_agents = {}   # {agent_id (int) -> (x, y)}
 
-# ── Stato episodio ───────────────────────────────────────────────────
 _n_spawned = 0   # numero di oggetti spawnati nell'episodio corrente
 _spawned_positions = []   # lista di (x, y) degli ostacoli già spawnati
-
-# ─────────────────────────────────────────────────────────────────────
-# HELPERS
-# ─────────────────────────────────────────────────────────────────────
 
 def _too_close_to_agent(x, y, min_dist=None):
     d = min_dist or MIN_DIST
@@ -85,10 +78,6 @@ def _reset_episode():
 def _compute_O():
     return 1 if _n_spawned > 0 else 0
 
-# ─────────────────────────────────────────────────────────────────────
-# CALLBACKS
-# ─────────────────────────────────────────────────────────────────────
-
 def cb_agents(msg):
     """Aggiorna snapshot posizioni di tutti gli agenti continuamente."""
     global _last_agents
@@ -128,31 +117,27 @@ def cb_episode_start(msg):
         actually_spawned += 1
 
     _n_spawned = actually_spawned
+    pos_str = ";".join("{:.3f},{:.3f}".format(x, y) for (x, y) in _spawned_positions)
+    obs_pos_pub.publish(String(pos_str))
     O_pub.publish(Int32(_compute_O()))
     ready_pub.publish(Bool(True))
     rospy.loginfo("[ObstaclePolicy] Spawnati %d/%d | O=%d", actually_spawned, n, _compute_O())
-
-def cb_episode_end(msg):
-    """
-    Fine episodio: loga O finale, rimuove tutti gli ostacoli, resetta stato.
-    """
-    o_final = _compute_O()
-
-    rospy.loginfo(
-        "[ObstaclePolicy] ── Episodio %d END | O=%d N=%d ──",
-        msg.data, o_final, _n_spawned
-    )
-
-    # Valore finale del confounder — decommentare quando il data logger e' pronto
-    # rospy.set_param('/hrisim/episode_O', o_final)
-    # rospy.set_param('/hrisim/episode_N', _n_spawned)
-
+    
+def cb_robot_arrived(msg):
+    rospy.loginfo("[ObstaclePolicy] Robot arrivato — despawn ostacoli")
+    obs_pos_pub.publish(String(""))
     _remove_all()
     _reset_episode()
 
-# ─────────────────────────────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────────────────────────────
+def cb_episode_end(msg):
+    rospy.loginfo(
+        "[ObstaclePolicy] ── Episodio %d END | O=%d N=%d ──",
+        msg.data, _compute_O(), _n_spawned
+    )
+    if _n_spawned > 0:   # robot_arrived non è arrivato (T=0), fai il remove ora
+        obs_pos_pub.publish(String(""))
+        _remove_all()
+        _reset_episode()
 
 if __name__ == "__main__":
     rospy.init_node("obstacle_policy_node")
@@ -174,10 +159,12 @@ if __name__ == "__main__":
     remove_pub = rospy.Publisher("/hrisim/obstacles/remove", String, queue_size=5)
     O_pub = rospy.Publisher("/hrisim/obs/O", Int32, queue_size=1, latch=True)
     ready_pub = rospy.Publisher("/hrisim/obstacles/ready", Bool, queue_size=1, latch=True)
+    obs_pos_pub = rospy.Publisher("/hrisim/obstacles/positions", String, queue_size=1, latch=True)
     rospy.sleep(0.5)
 
     rospy.Subscriber("/hrisim/episode_start",              Int32,       cb_episode_start)
     rospy.Subscriber("/hrisim/episode_end",                Int32,       cb_episode_end)
     rospy.Subscriber("/pedsim_simulator/simulated_agents", AgentStates, cb_agents)
+    rospy.Subscriber("/hrisim/robot_arrived", Bool, cb_robot_arrived)
 
     rospy.spin()
