@@ -1,4 +1,4 @@
-# PeopleFlow — Causal Effect Estimation of Robot Actions for Human-Aware Navigation
+# PeopleFlow | Causal Effect Estimation of Robot Actions for Human-Aware Navigation
 
 > This repository is a **fork of [lcastri/PeopleFlow](https://github.com/lcastri/PeopleFlow)**, extended for a
 > Bachelor's thesis on causal effect estimation in human-aware robot navigation
