@@ -33,33 +33,34 @@ The contribution of this fork consists of:
   unconditionally.
 - **A full recording and extraction pipeline** that turns raw simulation logs into a clean
   causal dataset of one row per episode over six binary variables (Pi, A, Pe, S, T, O).
-- **A causal analysis** (pyAgrum) estimating the effect of the action on the task outcome,
-  including naive vs. backdoor-adjusted estimates, a confounder-variant analysis, and a causal
-  discovery validation step.
+- **A causal analysis** estimating the effect of the action on the task outcome, including
+  naive vs. backdoor-adjusted estimates, a confounder-variant analysis, and a causal discovery
+  validation step.
 
 The main empirical result: the naive estimate of the action's effect is negative (about
 -0.21, a Simpson's paradox driven by the obstacle confounder), while every adjusted estimate is
 small but positive (about +0.03 to +0.11). Reasoning causally, rather than correlationally, is
 what separates "the action harms" from "the action helps".
 
-**Thesis:** _Causal Effect Estimation of Robot Actions for Human-Aware Navigation_ — [link to thesis: TBD].
+**Thesis:** _Causal Effect Estimation of Robot Actions for Human-Aware Navigation_ (available on request).
 
 ---
 
 ## Fork-specific components
 
 The following scripts and artefacts are specific to this fork and are not part of upstream
-PeopleFlow:
+PeopleFlow. Paths are relative to the repository root.
 
 | Component | Role |
 | --- | --- |
-| `TIAGo_plan.py` | Robot decision protocol: measures the bottleneck, decides and executes the HRI action, measures the outcome, publishes the DAG variables. Runs as a PetriNetPlans plan. |
-| `obstacle_policy.py` | Samples the confounder O per episode and chooses obstacle positions (rejection sampling for minimum distance to agents/obstacles). |
-| `DynamicObstacle.py` | Spawns/removes the obstacle models in Gazebo on request. |
-| `record.py` | Records one rosbag per episode over the relevant topics. |
-| `data_extractor.py` | Offline: converts each bag into a per-timestep time series (0.1 s) with all DAG variables and agent/robot positions. |
-| Causal notebook | Loads the aggregated dataset, builds/learns the DAG, and estimates the causal effect (naive, backdoor-adjusted, variant, discovery). |
-| `dataset_episodes_100_v1.csv` | The final dataset: 100 episodes, one row each. |
+| `<path>/TIAGo_plan.py` | Robot decision protocol: measures the bottleneck, decides and executes the HRI action, measures the outcome, publishes the DAG variables. Runs as a PetriNetPlans plan. |
+| `<path>/obstacle_policy.py` | Samples the confounder O per episode and chooses obstacle positions (rejection sampling for minimum distance to agents/obstacles). |
+| `<path>/DynamicObstacle.py` | Spawns/removes the obstacle models in Gazebo on request. |
+| `<path>/PedsimBridge.py` | Assigns each pedestrian its next destination, and applies the hold/override parameters that redirect flagged agents to an evasion waypoint when the robot signals. |
+| `<path>/record.py` | Records one rosbag per episode over the relevant topics. |
+| `<path>/data_extractor.py` | Offline: converts each bag into a per-timestep time series (0.1 s) with all DAG variables and agent/robot positions. |
+| `analysis/hrisim_causal_analysis.ipynb` | Loads the dataset, estimates the causal effect (naive, backdoor-adjusted, variant, discovery) and regenerates the figure used in the thesis. |
+| `analysis/episodes_100_v1.csv` | The final dataset: 100 episodes, one row each. |
 
 ### Reproducing the dataset and analysis
 
@@ -70,8 +71,10 @@ PeopleFlow:
    python3 data_extractor.py --bag_dir <bags> --output dataset_timeseries.csv
    ```
 3. Aggregate the time series to one row per episode (last valid value of each DAG variable per
-   episode) to obtain `dataset_episodes_100_v1.csv`.
-4. Run the causal notebook to reproduce the estimates.
+   episode) to obtain `episodes_100_v1.csv`.
+4. Run `analysis/hrisim_causal_analysis.ipynb` to reproduce the estimates and the figure. See
+   [`analysis/README.md`](analysis/README.md) for the dataset schema, the requirements and the
+   list of values it reproduces.
 
 ---
 
